@@ -19,7 +19,6 @@ namespace RBMAI
         public int side = MBRandom.RandomInt(2);
         public int cooldown = 0;
         public bool nudgeFormation;
-
         public bool wasShootingBefore = false;
 
         private enum BehaviorState

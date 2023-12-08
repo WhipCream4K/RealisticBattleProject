@@ -8,78 +8,97 @@ namespace RBMAI.AiModule.RbmTactics
     {
         [HarmonyPrefix]
         [HarmonyPatch("HasBattleBeenJoined")]
-        private static bool PrefixHasBattleBeenJoined(ref Formation ____mainInfantry, ref bool ____hasBattleBeenJoined, ref bool __result)
+        private static bool PrefixHasBattleBeenJoined(TacticDefensiveLine __instance,ref bool __result)
         {
-            __result = RBMAI.Utilities.HasBattleBeenJoined(____mainInfantry, ____hasBattleBeenJoined);
+            var tacticDefensiveLine = Traverse.Create(__instance);
+            Formation mainInfantry = tacticDefensiveLine.Field("_mainInfantry").GetValue<Formation>();
+            bool hasBattleBeenJoined = tacticDefensiveLine.Field("_hasBattleBeenJoined").GetValue<bool>();
+            
+            __result = RBMAI.Utilities.HasBattleBeenJoined(mainInfantry, hasBattleBeenJoined);
             return false;
         }
 
         [HarmonyPostfix]
         [HarmonyPatch("Defend")]
-        private static void PostfixDefend(ref Formation ____archers, ref Formation ____mainInfantry, ref Formation ____rightCavalry, ref Formation ____leftCavalry, ref Formation ____rangedCavalry)
+        private static void PostfixDefend(
+            TacticDefensiveLine __instance)
         {
-            if (____archers != null)
+            var tacticDefensiveLine = Traverse.Create(__instance);
+            Formation archers = tacticDefensiveLine.Field("_archers").GetValue<Formation>();
+            Formation mainInfantry = tacticDefensiveLine.Field("_mainInfantry").GetValue<Formation>();
+            Formation rightCavalry = tacticDefensiveLine.Field("_rightCavalry").GetValue<Formation>();
+            Formation leftCavalry = tacticDefensiveLine.Field("_leftCavalry").GetValue<Formation>();
+            Formation rangedCavalry = tacticDefensiveLine.Field("_rangedCavalry").GetValue<Formation>();
+            
+            if (archers != null)
             {
-                ____archers.AI.SetBehaviorWeight<BehaviorSkirmish>(0f);
-                ____archers.AI.SetBehaviorWeight<BehaviorSkirmishLine>(0f);
-                ____archers.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(1f);
-                ____archers.AI.SetBehaviorWeight<BehaviorRegroup>(1.25f);
+                archers.AI.SetBehaviorWeight<BehaviorSkirmish>(0f);
+                archers.AI.SetBehaviorWeight<BehaviorSkirmishLine>(0f);
+                archers.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(1f);
+                archers.AI.SetBehaviorWeight<BehaviorRegroup>(1.25f);
             }
-            if (____mainInfantry != null)
+            if (mainInfantry != null)
             {
-                ____mainInfantry.AI.SetBehaviorWeight<BehaviorRegroup>(1.75f);
+                mainInfantry.AI.SetBehaviorWeight<BehaviorRegroup>(1.75f);
             }
-            if (____rightCavalry != null)
+            if (rightCavalry != null)
             {
-                ____rightCavalry.AI.ResetBehaviorWeights();
-                ____rightCavalry.AI.SetBehaviorWeight<BehaviorProtectFlank>(1f).FlankSide = FormationAI.BehaviorSide.Right;
+                rightCavalry.AI.ResetBehaviorWeights();
+                rightCavalry.AI.SetBehaviorWeight<BehaviorProtectFlank>(1f).FlankSide = FormationAI.BehaviorSide.Right;
             }
-            if (____leftCavalry != null)
+            if (leftCavalry != null)
             {
-                ____leftCavalry.AI.ResetBehaviorWeights();
-                ____leftCavalry.AI.SetBehaviorWeight<BehaviorProtectFlank>(1f).FlankSide = FormationAI.BehaviorSide.Left;
+                leftCavalry.AI.ResetBehaviorWeights();
+                leftCavalry.AI.SetBehaviorWeight<BehaviorProtectFlank>(1f).FlankSide = FormationAI.BehaviorSide.Left;
             }
-            if (____rangedCavalry != null)
+            if (rangedCavalry != null)
             {
-                ____rangedCavalry.AI.ResetBehaviorWeights();
-                TacticFullScaleAttack.SetDefaultBehaviorWeights(____rangedCavalry);
-                ____rangedCavalry.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(1f);
-                ____rangedCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
+                rangedCavalry.AI.ResetBehaviorWeights();
+                TacticComponent.SetDefaultBehaviorWeights(rangedCavalry);
+                rangedCavalry.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(1f);
+                rangedCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
             }
         }
 
         [HarmonyPostfix]
         [HarmonyPatch("Engage")]
-        private static void PostfixEngage(ref Formation ____archers, ref Formation ____mainInfantry, ref Formation ____rightCavalry, ref Formation ____leftCavalry, ref Formation ____rangedCavalry)
+        private static void PostfixEngage(TacticDefensiveLine __instance)
         {
-            if (____archers != null)
+            var tacticDefensiveLine = Traverse.Create(__instance);
+            Formation archers = tacticDefensiveLine.Field("_archers").GetValue<Formation>();
+            Formation mainInfantry = tacticDefensiveLine.Field("_mainInfantry").GetValue<Formation>();
+            Formation rightCavalry = tacticDefensiveLine.Field("_rightCavalry").GetValue<Formation>();
+            Formation leftCavalry = tacticDefensiveLine.Field("_leftCavalry").GetValue<Formation>();
+            Formation rangedCavalry = tacticDefensiveLine.Field("_rangedCavalry").GetValue<Formation>();
+
+            if (archers != null)
             {
-                ____archers.AI.ResetBehaviorWeights();
-                ____archers.AI.SetBehaviorWeight<RBMBehaviorArcherSkirmish>(1f);
-                ____archers.AI.SetBehaviorWeight<BehaviorSkirmishLine>(0f);
-                ____archers.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(0f);
+                archers.AI.ResetBehaviorWeights();
+                archers.AI.SetBehaviorWeight<RBMBehaviorArcherSkirmish>(1f);
+                archers.AI.SetBehaviorWeight<BehaviorSkirmishLine>(0f);
+                archers.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(0f);
             }
-            if (____rightCavalry != null)
+            if (rightCavalry != null)
             {
-                ____rightCavalry.AI.ResetBehaviorWeights();
-                ____rightCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
-                ____rightCavalry.AI.SetBehaviorWeight<BehaviorCharge>(1f);
-                ____rightCavalry.AI.SetBehaviorWeight<RBMBehaviorCavalryCharge>(1f);
+                rightCavalry.AI.ResetBehaviorWeights();
+                rightCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
+                rightCavalry.AI.SetBehaviorWeight<BehaviorCharge>(1f);
+                rightCavalry.AI.SetBehaviorWeight<RBMBehaviorCavalryCharge>(1f);
             }
-            if (____leftCavalry != null)
+            if (leftCavalry != null)
             {
-                ____leftCavalry.AI.ResetBehaviorWeights();
-                ____leftCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
-                ____leftCavalry.AI.SetBehaviorWeight<BehaviorCharge>(1f);
-                ____leftCavalry.AI.SetBehaviorWeight<RBMBehaviorCavalryCharge>(1f);
+                leftCavalry.AI.ResetBehaviorWeights();
+                leftCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
+                leftCavalry.AI.SetBehaviorWeight<BehaviorCharge>(1f);
+                leftCavalry.AI.SetBehaviorWeight<RBMBehaviorCavalryCharge>(1f);
             }
-            if (____rangedCavalry != null)
+            if (rangedCavalry != null)
             {
-                ____rangedCavalry.AI.ResetBehaviorWeights();
-                TacticFullScaleAttack.SetDefaultBehaviorWeights(____rangedCavalry);
-                ____rangedCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
+                rangedCavalry.AI.ResetBehaviorWeights();
+                TacticComponent.SetDefaultBehaviorWeights(rangedCavalry);
+                rangedCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
             }
-            RBMAI.Utilities.FixCharge(ref ____mainInfantry);
+            RBMAI.Utilities.FixCharge(ref mainInfantry);
         }
     }
 }

@@ -336,7 +336,8 @@ public class RBMBehaviorCavalryCharge : BehaviorComponent
         if (base.Formation.QuerySystem.ClosestEnemyFormation != null)
         {
             behaviorString.SetTextVariable("AI_SIDE", GameTexts.FindText("str_formation_ai_side_strings", base.Formation.QuerySystem.ClosestEnemyFormation.Formation.AI.Side.ToString()));
-            behaviorString.SetTextVariable("CLASS", GameTexts.FindText("str_formation_class_string", base.Formation.QuerySystem.ClosestEnemyFormation.Formation.RepresentativeClass.GetName()));
+            behaviorString.SetTextVariable("CLASS", GameTexts.FindText("str_formation_class_string", 
+                base.Formation.QuerySystem.ClosestEnemyFormation.Formation.PrimaryClass.ToString()));
         }
         return behaviorString;
     }

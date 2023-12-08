@@ -379,12 +379,20 @@ namespace RBMAI
         [HarmonyPatch("EarlyStart")]
         public class EarlyStartPatch
         {
-            public static void Postfix(ref IBattleCombatant ____attackerLeaderBattleCombatant, ref IBattleCombatant ____defenderLeaderBattleCombatant)
+            public static void Postfix(MissionCombatantsLogic __instance)
             {
                 aiDecisionCooldownDict.Clear();
                 agentDamage.Clear();
                 RBMAiPatcher.DoPatching();
                 AgentAi.OnTickAsAIPatch.itemPickupDistanceStorage.Clear();
+
+                var missionCombatantsLogic = Traverse.Create(__instance);
+                IBattleCombatant attackerLeaderBattleCombatant = missionCombatantsLogic
+                    .Field("_attackerLeaderBattleCombatant").GetValue<IBattleCombatant>();
+
+                IBattleCombatant defenderLeaderBattleCombatant = missionCombatantsLogic
+                    .Field("_defenderLeaderBattleCombatant").GetValue<IBattleCombatant>();
+                
                 if (Mission.Current.Teams.Any())
                 {
                     if (Mission.Current.MissionTeamAIType == Mission.MissionTeamAITypeEnum.FieldBattle)
@@ -394,7 +402,7 @@ namespace RBMAI
                             if (team.Side == BattleSideEnum.Attacker)
                             {
                                 team.ClearTacticOptions();
-                                if (____attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Empire)
+                                if (attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Empire)
                                 {
                                     team.AddTacticOption(new RBMTacticEmbolon(team));
                                 }
@@ -402,15 +410,15 @@ namespace RBMAI
                                 {
                                     //team.AddTacticOption(new TacticFrontalCavalryCharge(team));
                                 }
-                                if (____attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Aserai || ____attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Darshi)
+                                if (attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Aserai || attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Darshi)
                                 {
                                     team.AddTacticOption(new RBMTacticAttackSplitSkirmishers(team));
                                 }
-                                if (____attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Sturgia || ____attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Nord)
+                                if (attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Sturgia || attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Nord)
                                 {
                                     team.AddTacticOption(new RBMTacticAttackSplitInfantry(team));
                                 }
-                                if (____attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Battania)
+                                if (attackerLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Battania)
                                 {
                                     team.AddTacticOption(new RBMTacticAttackSplitArchers(team));
                                 }
@@ -428,13 +436,13 @@ namespace RBMAI
                             if (team.Side == BattleSideEnum.Defender)
                             {
                                 team.ClearTacticOptions();
-                                if (____defenderLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Battania)
+                                if (defenderLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Battania)
                                 {
                                     team.AddTacticOption(new RBMTacticDefendSplitArchers(team));
                                 }
                                 team.AddTacticOption(new TacticDefensiveEngagement(team));
                                 team.AddTacticOption(new TacticDefensiveLine(team));
-                                if (____defenderLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Sturgia)
+                                if (defenderLeaderBattleCombatant?.BasicCulture?.GetCultureCode() == CultureCode.Sturgia)
                                 {
                                     team.AddTacticOption(new RBMTacticDefendSplitInfantry(team));
                                 }
@@ -587,7 +595,7 @@ namespace RBMAI
                 if (____rangedCavalry != null)
                 {
                     ____rangedCavalry.AI.ResetBehaviorWeights();
-                    TacticRangedHarrassmentOffensive.SetDefaultBehaviorWeights(____rangedCavalry);
+                    TacticComponent.SetDefaultBehaviorWeights(____rangedCavalry);
                     ____rangedCavalry.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(1f);
                     ____rangedCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
                 }
@@ -784,7 +792,15 @@ namespace RBMAI
                         if (agent != null && agent.IsHuman && !agent.IsRunningAway)
                         {
                             EquipmentIndex wieldedItemIndex = agent.GetWieldedItemIndex(Agent.HandIndex.MainHand);
-                            bool isRanged = (wieldedItemIndex != EquipmentIndex.None && agent.Equipment.HasRangedWeapon(WeaponClass.Arrow) && agent.Equipment.GetAmmoAmount(wieldedItemIndex) > 5) || (wieldedItemIndex != EquipmentIndex.None && agent.Equipment.HasRangedWeapon(WeaponClass.Bolt) && agent.Equipment.GetAmmoAmount(wieldedItemIndex) > 5);
+
+                            if (agent.Equipment[wieldedItemIndex].IsEmpty)
+                            {
+                                continue;
+                            }
+                            
+                            int ammoCount = agent.Equipment[wieldedItemIndex].Ammo;
+                            
+                            bool isRanged = (wieldedItemIndex != EquipmentIndex.None && agent.Equipment.HasRangedWeapon(WeaponClass.Arrow) && ammoCount > 5) || (wieldedItemIndex != EquipmentIndex.None && agent.Equipment.HasRangedWeapon(WeaponClass.Bolt) && ammoCount > 5);
                             if (agent.HasMount && isRanged)
                             {
                                 if (__instance.Team.GetFormation(FormationClass.HorseArcher) != null && __instance.Team.GetFormation(FormationClass.HorseArcher).IsAIControlled && agent.Formation != null && agent.Formation.IsAIControlled)

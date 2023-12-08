@@ -22,10 +22,15 @@ namespace RBMAI
         public static void FirstPatch(ref Harmony rbmaiHarmony)
         {
             harmony = rbmaiHarmony;
-            var original = AccessTools.Method(typeof(MissionCombatantsLogic), "EarlyStart");
+            var original = AccessTools.Method(typeof(MissionCombatantsLogic), 
+                nameof(MissionCombatantsLogic.EarlyStart));
             var postfix = AccessTools.Method(typeof(Tactics.EarlyStartPatch), nameof(Tactics.EarlyStartPatch.Postfix));
+            
             harmony.Patch(original, null, new HarmonyMethod(postfix));
-            var original2 = AccessTools.Method(typeof(CampaignMissionComponent), "EarlyStart");
+            
+            var original2 = AccessTools.Method(typeof(CampaignMissionComponent),
+                nameof(CampaignMissionComponent.EarlyStart));
+            
             var postfix2 = AccessTools.Method(typeof(Tactics.CampaignMissionComponentPatch), nameof(Tactics.CampaignMissionComponentPatch.Postfix));
             harmony.Patch(original2, null, new HarmonyMethod(postfix2));
 

@@ -517,7 +517,9 @@ namespace RBMCombat
 
         private static bool Prefix(ref int armorValue, ref int __result, ref ItemModifier __instance)
         {
-            float calculatedModifier = 1f + (__instance.Armor / 100f);
+            int armor = Traverse.Create(__instance).Field("_armor").GetValue<int>();
+            
+            float calculatedModifier = 1f + (armor/ 100f);
             int result = ModifyFactor(armorValue, calculatedModifier);
             __result = MBMath.ClampInt(result, 1, result);
             return false;
@@ -543,7 +545,9 @@ namespace RBMCombat
 
         private static bool Prefix(ref int baseDamage, ref int __result, ref ItemModifier __instance)
         {
-            float calculatedModifier = 1f + (__instance.Damage / 100f);
+            int damage = Traverse.Create(__instance).Field("_damage").GetValue<int>();
+            
+            float calculatedModifier = 1f + (damage / 100f);
             int result = ModifyFactor(baseDamage, calculatedModifier);
             __result = MBMath.ClampInt(result, 1, result);
             return false;

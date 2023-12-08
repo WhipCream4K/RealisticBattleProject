@@ -54,7 +54,11 @@ namespace RBMCombat
                         if (attacker != null)
                         {
                             SkillObject skill = weapon.CurrentUsageItem.RelevantSkill;
-                            int ef = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackInformation.AttackerAgent, skill);
+                            int ef = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                                attackInformation.AttackerAgentCharacter,
+                                attackInformation.AttackerAgentOrigin,
+                                attackInformation.AttackerFormation, skill);
+                            
                             float effectiveSkillDR = Utilities.GetEffectiveSkillWithDR(ef);
                             switch (weapon.CurrentUsageItem.WeaponClass)
                             {
@@ -153,7 +157,11 @@ namespace RBMCombat
                         }
                     }
                     SkillObject skill = weapon.CurrentUsageItem.RelevantSkill;
-                    int ef = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackInformation.AttackerAgent, skill);
+                    // int ef = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackInformation.AttackerAgent, skill);
+                    int ef = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                        attackInformation.AttackerAgentCharacter,
+                        attackInformation.AttackerAgentOrigin,
+                        attackInformation.AttackerFormation, skill);
                     float effectiveSkillDR = Utilities.GetEffectiveSkillWithDR(ef);
                     switch (weapon.CurrentUsageItem.WeaponClass)
                     {

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.Extensions;
 using TaleWorlds.Core;
 using TaleWorlds.Engine;
 using TaleWorlds.Library;
@@ -45,7 +44,10 @@ namespace RBMAI
 
                 SkillObject skill = (equippedItem == null) ? DefaultSkills.Athletics : equippedItem.RelevantSkill;
                 int meleeSkill = (int)method.Invoke(__instance, new object[] { agent, equippedItem, secondaryItem });
-                int effectiveSkill = __instance.GetEffectiveSkill(agent, skill);
+                // int effectiveSkill = __instance.GetEffectiveSkill(agent, skill);
+                int effectiveSkill = __instance.GetEffectiveSkill(
+                    agent.Character,agent.Origin,agent.Formation, skill);
+                
                 float meleeLevel = RBMAI.Utilities.CalculateAILevel(agent, meleeSkill);                 //num
                 float effectiveSkillLevel = RBMAI.Utilities.CalculateAILevel(agent, effectiveSkill);    //num2
                 float meleeDefensivness = meleeLevel + agent.Defensiveness;             //num3
@@ -201,7 +203,10 @@ namespace RBMAI
                 float reloadSpeed = agentDrivenProperties.ReloadSpeed;
                 if (characterObject != null && equippedWeaponComponent != null)
                 {
-                    int effectiveSkill = __instance.GetEffectiveSkill(agent, equippedWeaponComponent.RelevantSkill);
+                    // int effectiveSkill = __instance.GetEffectiveSkill(agent, equippedWeaponComponent.RelevantSkill);
+                    int effectiveSkill = __instance.GetEffectiveSkill(agent.Character,
+                        agent.Origin,agent.Formation, equippedWeaponComponent.RelevantSkill);
+                    
                     ExplainedNumber stat = new ExplainedNumber(swingSpeedMultiplier);
                     ExplainedNumber stat2 = new ExplainedNumber(thrustOrRangedReadySpeedMultiplier);
                     ExplainedNumber stat3 = new ExplainedNumber(reloadSpeed);
@@ -437,15 +442,27 @@ namespace RBMAI
         {
             public static Dictionary<Agent, float> itemPickupDistanceStorage = new Dictionary<Agent, float> { };
 
-            private static bool Prefix(ref HumanAIComponent __instance, ref SpawnedItemEntity ____itemToPickUp, ref Agent ___Agent, ref MissionTimer ____itemPickUpTickTimer, ref bool ____disablePickUpForAgent, ref GameEntity[] ____tempPickableEntities, ref UIntPtr[] ____pickableItemsId)
+            private static bool Prefix(HumanAIComponent __instance)
             {
-                bool timer = ____itemPickUpTickTimer.Check(reset: true);
-                bool mended = ___Agent.Mission.MissionEnded;
+                var humanAIComponent = Traverse.Create(__instance);
+                SpawnedItemEntity itemToPickUp = humanAIComponent.Field("_itemToPickUp").GetValue() as SpawnedItemEntity;
+                Agent agent = humanAIComponent.Field("Agent").GetValue() as Agent;
+                MissionTimer itemPickUpTickTimer =
+                    humanAIComponent.Field("_itemPickUpTickTimer").GetValue() as MissionTimer;
+                
+                GameEntity[] tempPickableEntities =
+                    humanAIComponent.Field("_tempPickableEntities").GetValue<GameEntity[]>();
+
+                // bool disablePickUpForAgent = humanAIComponent.Field("_disablePickUpForAgent").GetValue<bool>();
+                UIntPtr[] pickableItemsId = humanAIComponent.Field("_pickableItemsId").GetValue<UIntPtr[]>();
+                
+                bool timer = itemPickUpTickTimer.Check(reset: true);
+                bool mended = agent.Mission.MissionEnded;
                 bool hasWeapon = false;
 
                 for (int i = 0; i < 5; i++)
                 {
-                    WeaponComponentData currentUsageItem = ___Agent.Equipment[i].CurrentUsageItem;
+                    WeaponComponentData currentUsageItem = agent.Equipment[i].CurrentUsageItem;
                     if (currentUsageItem != null && currentUsageItem.WeaponFlags.HasAnyFlag(WeaponFlags.MeleeWeapon))
                     {
                         hasWeapon = true;
@@ -454,41 +471,42 @@ namespace RBMAI
 
                 if (timer && !mended && !hasWeapon)
                 {
-                    EquipmentIndex wieldedItemIndex = ___Agent.GetWieldedItemIndex(Agent.HandIndex.MainHand);
-                    bool flag = ((wieldedItemIndex == EquipmentIndex.None) ? null : ___Agent.Equipment[wieldedItemIndex].CurrentUsageItem)?.IsRangedWeapon ?? false;
-                    if ( ___Agent.CanBeAssignedForScriptedMovement() && ___Agent.CurrentWatchState == Agent.WatchState.Alarmed && (___Agent.GetAgentFlags() & AgentFlag.CanAttack) != 0)
+                    EquipmentIndex wieldedItemIndex = agent.GetWieldedItemIndex(Agent.HandIndex.MainHand);
+                    bool flag = ((wieldedItemIndex == EquipmentIndex.None) ? null : agent.Equipment[wieldedItemIndex].CurrentUsageItem)?.IsRangedWeapon ?? false;
+                    if ( agent.CanBeAssignedForScriptedMovement() && agent.CurrentWatchState == Agent.WatchState.Alarmed && (agent.GetAgentFlags() & AgentFlag.CanAttack) != 0)
                     {
-                        Agent targetAgent = ___Agent.GetTargetAgent();
-                        float maximumForwardUnlimitedSpeed = ___Agent.MaximumForwardUnlimitedSpeed;
-                        if (____itemToPickUp == null)
+                        Agent targetAgent = agent.GetTargetAgent();
+                        float maximumForwardUnlimitedSpeed = agent.MaximumForwardUnlimitedSpeed;
+                        if (itemToPickUp == null)
                         {
-                            Vec3 bMin = ___Agent.Position - new Vec3(50f, 50f, 1f);
-                            Vec3 bMax = ___Agent.Position + new Vec3(50f, 50f, 1.8f);
+                            Vec3 bMin = agent.Position - new Vec3(50f, 50f, 1f);
+                            Vec3 bMax = agent.Position + new Vec3(50f, 50f, 1.8f);
 
-                            Vec3 v = ((targetAgent == null) ? Vec3.Invalid : (targetAgent.Position - ___Agent.Position));
-                            int num = ___Agent.Mission.Scene.SelectEntitiesInBoxWithScriptComponent<SpawnedItemEntity>(ref bMin, ref bMax, ____tempPickableEntities, ____pickableItemsId);
+                            Vec3 v = ((targetAgent == null) ? Vec3.Invalid : (targetAgent.Position - agent.Position));
+                            int num = agent.Mission.Scene.SelectEntitiesInBoxWithScriptComponent<SpawnedItemEntity>(ref bMin, ref bMax, tempPickableEntities, pickableItemsId);
                             float num2 = -1f;
                             SpawnedItemEntity result = null;
                             for (int i = 0; i < num; i++)
                             {
-                                SpawnedItemEntity firstScriptOfType = ____tempPickableEntities[i].GetFirstScriptOfType<SpawnedItemEntity>();
+                                SpawnedItemEntity firstScriptOfType = tempPickableEntities[i].GetFirstScriptOfType<SpawnedItemEntity>();
                                 bool flag2 = false;
                                 if (firstScriptOfType != null)
                                 {
                                     MissionWeapon weaponCopy = firstScriptOfType.WeaponCopy;
                                     flag2 = !weaponCopy.IsEmpty && (!weaponCopy.IsShield() && !weaponCopy.IsBanner() && !firstScriptOfType.IsStuckMissile() && !firstScriptOfType.IsQuiverAndNotEmpty());
                                 }
-                                if (!flag2 || firstScriptOfType.HasUser || (firstScriptOfType.HasAIMovingTo && !firstScriptOfType.IsAIMovingTo(___Agent)) || !(firstScriptOfType.GameEntityWithWorldPosition.WorldPosition.GetNavMesh() != UIntPtr.Zero))
+                                if (!flag2 || firstScriptOfType.HasUser || (firstScriptOfType.HasAIMovingTo && !firstScriptOfType.IsAIMovingTo(agent)) || !(firstScriptOfType.GameEntityWithWorldPosition.WorldPosition.GetNavMesh() != UIntPtr.Zero))
                                 {
                                     continue;
                                 }
-                                Vec3 v2 = firstScriptOfType.GetUserFrameForAgent(___Agent).Origin.GetGroundVec3() - ___Agent.Position;
+                                Vec3 v2 = firstScriptOfType.GetUserFrameForAgent(agent).Origin.GetGroundVec3() - agent.Position;
                                 v2.Normalize();
-                                EquipmentIndex equipmentIndex = MissionEquipment.SelectWeaponPickUpSlot(___Agent, firstScriptOfType.WeaponCopy, firstScriptOfType.IsStuckMissile());
+                                EquipmentIndex equipmentIndex = MissionEquipment.SelectWeaponPickUpSlot(agent, firstScriptOfType.WeaponCopy, firstScriptOfType.IsStuckMissile());
                                 WorldPosition worldPosition = firstScriptOfType.GameEntityWithWorldPosition.WorldPosition;
-                                if (equipmentIndex != EquipmentIndex.None && worldPosition.GetNavMesh() != UIntPtr.Zero && ___Agent.Equipment[equipmentIndex].IsEmpty && ___Agent.CanMoveDirectlyToPosition(worldPosition.AsVec2))
+                                if (equipmentIndex != EquipmentIndex.None && worldPosition.GetNavMesh() != UIntPtr.Zero && agent.Equipment[equipmentIndex].IsEmpty 
+                                    && /*___Agent.CanMoveDirectlyToPosition(worldPosition.AsVec2)*/ agent.CanMoveDirectlyToPosition(worldPosition))
                                 {
-                                    float itemScoreForAgent = MissionGameModels.Current.ItemPickupModel.GetItemScoreForAgent(firstScriptOfType, ___Agent);
+                                    float itemScoreForAgent = MissionGameModels.Current.ItemPickupModel.GetItemScoreForAgent(firstScriptOfType, agent);
                                     if (itemScoreForAgent > num2)
                                     {
                                         result = firstScriptOfType;
@@ -496,10 +514,15 @@ namespace RBMAI
                                     }
                                 }
                             }
-                            ____itemToPickUp = result;
-                            if (____itemToPickUp != null)
+
+                            // need to make sure to actually set the value of the class
+                            humanAIComponent.Field("_itemToPickUp").SetValue(result);
+                            
+                            itemToPickUp = result;
+                            
+                            if (itemToPickUp != null)
                             {
-                                ____itemToPickUp.MovingAgent?.StopUsingGameObject(isSuccessful: false);
+                                itemToPickUp.MovingAgent?.StopUsingGameObject(isSuccessful: false);
                                 __instance.MoveToUsableGameObject(result, null);
                             }
                         }
@@ -508,29 +531,34 @@ namespace RBMAI
                 return true;
             }
 
-            private static void Postfix(ref SpawnedItemEntity ____itemToPickUp, ref Agent ___Agent)
+            private static void Postfix(HumanAIComponent __instance)
             {
-                if (____itemToPickUp != null && (___Agent.AIStateFlags & Agent.AIStateFlag.UseObjectMoving) != 0)
+                var humanAIComponent = Traverse.Create(__instance);
+                SpawnedItemEntity itemToPickUp = humanAIComponent.Field("_itemToPickUp").GetValue() as SpawnedItemEntity;
+                Agent agent = humanAIComponent.Field("Agent").GetValue() as Agent;
+
+                
+                if (itemToPickUp != null && (agent.AIStateFlags & Agent.AIStateFlag.UseObjectMoving) != 0)
                 {
-                    float num = MissionGameModels.Current.AgentStatCalculateModel.GetInteractionDistance(___Agent) * 3f;
-                    WorldFrame userFrameForAgent = ____itemToPickUp.GetUserFrameForAgent(___Agent);
+                    float num = MissionGameModels.Current.AgentStatCalculateModel.GetInteractionDistance(agent) * 3f;
+                    WorldFrame userFrameForAgent = itemToPickUp.GetUserFrameForAgent(agent);
                     ref WorldPosition origin = ref userFrameForAgent.Origin;
-                    Vec3 targetPoint = ___Agent.Position;
+                    Vec3 targetPoint = agent.Position;
                     float distanceSq = origin.DistanceSquaredWithLimit(in targetPoint, num * num + 1E-05f);
                     float newDist = -1f;
-                    itemPickupDistanceStorage.TryGetValue(___Agent, out newDist);
+                    itemPickupDistanceStorage.TryGetValue(agent, out newDist);
                     if (newDist == 0f)
                     {
-                        itemPickupDistanceStorage[___Agent] = distanceSq;
+                        itemPickupDistanceStorage[agent] = distanceSq;
                     }
                     else
                     {
-                        if (distanceSq == newDist)
+                        if (Math.Abs(distanceSq - newDist) < 0.001f)
                         {
-                            ___Agent.StopUsingGameObject(isSuccessful: false);
-                            itemPickupDistanceStorage.Remove(___Agent);
+                            agent.StopUsingGameObject(isSuccessful: false);
+                            itemPickupDistanceStorage.Remove(agent);
                         }
-                        itemPickupDistanceStorage[___Agent] = distanceSq;
+                        itemPickupDistanceStorage[agent] = distanceSq;
                     }
                 }
             }

@@ -50,7 +50,9 @@ namespace RBMAI.AiModule
                             tempPos.x = tempPos.x + MBRandom.RandomInt(20);
                             tempPos.y = tempPos.y + MBRandom.RandomInt(20);
 
-                            initialPosition = Mission.Current.DeploymentPlan?.GetClosestDeploymentBoundaryPosition(agentTeam.Side, tempPos, true, 0).ToVec3();
+                            initialPosition = Mission.Current.DeploymentPlan?.GetClosestDeploymentBoundaryPosition(
+                                agentTeam.Side, tempPos, DeploymentPlanType.Initial).ToVec3();
+                            
                             initialDirection = tempPos - formation.CurrentPosition;
                         }
                     }
@@ -64,14 +66,19 @@ namespace RBMAI.AiModule
         {
             [HarmonyPrefix]
             [HarmonyPatch("AfterStart")]
-            private static bool PrefixAfterStart(ref MapEvent ____mapEvent, ref MissionAgentSpawnLogic ____missionAgentSpawnLogic)
+            private static bool PrefixAfterStart(SandBoxSiegeMissionSpawnHandler __instance)
             {
-                if (____mapEvent != null)
+                var sandBoxSiegeMissionSpawnHandler = Traverse.Create(__instance);
+                MapEvent mapEvent = sandBoxSiegeMissionSpawnHandler.Field("_mapEvent").GetValue<MapEvent>();
+                MissionAgentSpawnLogic missionAgentSpawnLogic = sandBoxSiegeMissionSpawnHandler
+                    .Field("_missionAgentSpawnLogic").GetValue<MissionAgentSpawnLogic>();
+                
+                if (mapEvent != null)
                 {
-                    int battleSize = ____missionAgentSpawnLogic.BattleSize;
+                    int battleSize = missionAgentSpawnLogic.BattleSize;
 
-                    int numberOfInvolvedMen = ____mapEvent.GetNumberOfInvolvedMen(BattleSideEnum.Defender);
-                    int numberOfInvolvedMen2 = ____mapEvent.GetNumberOfInvolvedMen(BattleSideEnum.Attacker);
+                    int numberOfInvolvedMen = mapEvent.GetNumberOfInvolvedMen(BattleSideEnum.Defender);
+                    int numberOfInvolvedMen2 = mapEvent.GetNumberOfInvolvedMen(BattleSideEnum.Attacker);
                     int defenderInitialSpawn = numberOfInvolvedMen;
                     int attackerInitialSpawn = numberOfInvolvedMen2;
 
@@ -84,8 +91,8 @@ namespace RBMAI.AiModule
                         {
                             defenderAdvantage = (float)totalBattleSize / (float)battleSize;
                         }
-                        ____missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Defender, false);
-                        ____missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Attacker, false);
+                        missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Defender, false);
+                        missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Attacker, false);
 
                         MissionSpawnSettings spawnSettings = MissionSpawnSettings.CreateDefaultSpawnSettings();
                         spawnSettings.DefenderAdvantageFactor = defenderAdvantage;
@@ -94,7 +101,7 @@ namespace RBMAI.AiModule
                         //MissionSpawnSettings(10f, 0f, 0, InitialSpawnMethod.BattleSizeAllocating, ReinforcementSpawnMethod.Balanced, 0.05f, 0.166f); normal
                         //MissionSpawnSettings(90f, -15f, 5, InitialSpawnMethod.FreeAllocation, ReinforcementSpawnMethod.Fixed, 0f, 0f, 0f, 0.1f); sallyout
 
-                        ____missionAgentSpawnLogic.InitWithSinglePhase(numberOfInvolvedMen, numberOfInvolvedMen2, defenderInitialSpawn, attackerInitialSpawn, spawnDefenders: true, spawnAttackers: true, in spawnSettings);
+                        missionAgentSpawnLogic.InitWithSinglePhase(numberOfInvolvedMen, numberOfInvolvedMen2, defenderInitialSpawn, attackerInitialSpawn, spawnDefenders: true, spawnAttackers: true, in spawnSettings);
                         return false;
                     }
                     return true;
@@ -108,12 +115,19 @@ namespace RBMAI.AiModule
         {
             [HarmonyPrefix]
             [HarmonyPatch("AfterStart")]
-            private static bool PrefixAfterStart(ref MissionAgentSpawnLogic ____missionAgentSpawnLogic, ref CustomBattleCombatant[] ____battleCombatants)
+            private static bool PrefixAfterStart(CustomSiegeMissionSpawnHandler __instance)
             {
-                int battleSize = ____missionAgentSpawnLogic.BattleSize;
+                var customSiegeMissionSpawnHandler = Traverse.Create(__instance);
+                MissionAgentSpawnLogic missionAgentSpawnLogic = customSiegeMissionSpawnHandler
+                    .Field("_missionAgentSpawnLogic").GetValue<MissionAgentSpawnLogic>();
 
-                int numberOfInvolvedMen = ____battleCombatants[0].NumberOfHealthyMembers;
-                int numberOfInvolvedMen2 = ____battleCombatants[1].NumberOfHealthyMembers;
+                CustomBattleCombatant[] battleCombatants = customSiegeMissionSpawnHandler.Field("_battleCombatants")
+                    .GetValue<CustomBattleCombatant[]>();
+                
+                int battleSize = missionAgentSpawnLogic.BattleSize;
+
+                int numberOfInvolvedMen = battleCombatants[0].NumberOfHealthyMembers;
+                int numberOfInvolvedMen2 = battleCombatants[1].NumberOfHealthyMembers;
                 int defenderInitialSpawn = numberOfInvolvedMen;
                 int attackerInitialSpawn = numberOfInvolvedMen2;
 
@@ -126,8 +140,8 @@ namespace RBMAI.AiModule
                     {
                         defenderAdvantage = (float)totalBattleSize / (float)battleSize;
                     }
-                    ____missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Defender, false);
-                    ____missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Attacker, false);
+                    missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Defender, false);
+                    missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Attacker, false);
 
                     MissionSpawnSettings spawnSettings = MissionSpawnSettings.CreateDefaultSpawnSettings();
                     spawnSettings.DefenderAdvantageFactor = defenderAdvantage;
@@ -136,7 +150,7 @@ namespace RBMAI.AiModule
                     //MissionSpawnSettings(10f, 0f, 0, InitialSpawnMethod.BattleSizeAllocating, ReinforcementSpawnMethod.Balanced, 0.05f, 0.166f); normal
                     //MissionSpawnSettings(90f, -15f, 5, InitialSpawnMethod.FreeAllocation, ReinforcementSpawnMethod.Fixed, 0f, 0f, 0f, 0.1f); sallyout
 
-                    ____missionAgentSpawnLogic.InitWithSinglePhase(numberOfInvolvedMen, numberOfInvolvedMen2, defenderInitialSpawn, attackerInitialSpawn, spawnDefenders: true, spawnAttackers: true, in spawnSettings);
+                    missionAgentSpawnLogic.InitWithSinglePhase(numberOfInvolvedMen, numberOfInvolvedMen2, defenderInitialSpawn, attackerInitialSpawn, spawnDefenders: true, spawnAttackers: true, in spawnSettings);
                     return false;
                 }
                 return true;
@@ -148,12 +162,23 @@ namespace RBMAI.AiModule
         {
             [HarmonyPrefix]
             [HarmonyPatch("AfterStart")]
-            private static bool PrefixAfterStart(ref MissionAgentSpawnLogic ____missionAgentSpawnLogic, ref CustomBattleCombatant ____defenderParty, ref CustomBattleCombatant ____attackerParty)
+            private static bool PrefixAfterStart(CustomBattleMissionSpawnHandler __instance)
             {
-                int battleSize = ____missionAgentSpawnLogic.BattleSize;
+                var customBattleMissionSpawnHandler = Traverse.Create(__instance);
+                
+                MissionAgentSpawnLogic missionAgentSpawnLogic = customBattleMissionSpawnHandler
+                    .Field("_missionAgentSpawnLogic").GetValue<MissionAgentSpawnLogic>();
 
-                int numberOfHealthyMembers = ____defenderParty.NumberOfHealthyMembers;
-                int numberOfHealthyMembers2 = ____attackerParty.NumberOfHealthyMembers;
+                CustomBattleCombatant defenderParty = customBattleMissionSpawnHandler.Field("_defenderParty")
+                    .GetValue<CustomBattleCombatant>();
+
+                CustomBattleCombatant attackParty = customBattleMissionSpawnHandler.Field("_attackParty")
+                    .GetValue<CustomBattleCombatant>();
+                
+                int battleSize = missionAgentSpawnLogic.BattleSize;
+
+                int numberOfHealthyMembers = defenderParty.NumberOfHealthyMembers;
+                int numberOfHealthyMembers2 = attackParty.NumberOfHealthyMembers;
                 int defenderInitialSpawn = numberOfHealthyMembers;
                 int attackerInitialSpawn = numberOfHealthyMembers2;
 
@@ -166,8 +191,8 @@ namespace RBMAI.AiModule
                     {
                         defenderAdvantage = (float)totalBattleSize / (float)battleSize;
                     }
-                    ____missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Defender, !Mission.Current.IsSiegeBattle);
-                    ____missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Attacker, !Mission.Current.IsSiegeBattle);
+                    missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Defender, !Mission.Current.IsSiegeBattle);
+                    missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Attacker, !Mission.Current.IsSiegeBattle);
 
                     MissionSpawnSettings spawnSettings = MissionSpawnSettings.CreateDefaultSpawnSettings();
                     spawnSettings.DefenderAdvantageFactor = defenderAdvantage;
@@ -179,7 +204,7 @@ namespace RBMAI.AiModule
                     propertySReinforcementTroopsSpawnMethod.DeclaringType.GetProperty("ReinforcementTroopsSpawnMethod");
                     propertySReinforcementTroopsSpawnMethod.SetValue(spawnSettings, MissionSpawnSettings.ReinforcementSpawnMethod.Fixed, BindingFlags.NonPublic | BindingFlags.SetProperty, null, null, null);
 
-                    ____missionAgentSpawnLogic.InitWithSinglePhase(numberOfHealthyMembers, numberOfHealthyMembers2, defenderInitialSpawn, attackerInitialSpawn, spawnDefenders: true, spawnAttackers: true, in spawnSettings);
+                    missionAgentSpawnLogic.InitWithSinglePhase(numberOfHealthyMembers, numberOfHealthyMembers2, defenderInitialSpawn, attackerInitialSpawn, spawnDefenders: true, spawnAttackers: true, in spawnSettings);
                     return false;
                 }
                 return true;
@@ -191,14 +216,21 @@ namespace RBMAI.AiModule
         {
             [HarmonyPrefix]
             [HarmonyPatch("AfterStart")]
-            private static bool PrefixAfterStart(ref MissionAgentSpawnLogic ____missionAgentSpawnLogic, ref MapEvent ____mapEvent)
+            private static bool PrefixAfterStart(SandBoxBattleMissionSpawnHandler __instance)
             {
-                if (____mapEvent != null)
-                {
-                    int battleSize = ____missionAgentSpawnLogic.BattleSize;
+                var sandBoxBattleMissionSpawnHandler = Traverse.Create(__instance);
 
-                    int numberOfInvolvedMen = ____mapEvent.GetNumberOfInvolvedMen(BattleSideEnum.Defender);
-                    int numberOfInvolvedMen2 = ____mapEvent.GetNumberOfInvolvedMen(BattleSideEnum.Attacker);
+                MissionAgentSpawnLogic missionAgentSpawnLogic = sandBoxBattleMissionSpawnHandler
+                    .Field("_missionAgentSpawnLogic").GetValue<MissionAgentSpawnLogic>();
+
+                MapEvent mapEvent = sandBoxBattleMissionSpawnHandler.Field("_mapEvent").GetValue<MapEvent>();
+                
+                if (mapEvent != null)
+                {
+                    int battleSize = missionAgentSpawnLogic.BattleSize;
+
+                    int numberOfInvolvedMen = mapEvent.GetNumberOfInvolvedMen(BattleSideEnum.Defender);
+                    int numberOfInvolvedMen2 = mapEvent.GetNumberOfInvolvedMen(BattleSideEnum.Attacker);
                     int defenderInitialSpawn = numberOfInvolvedMen;
                     int attackerInitialSpawn = numberOfInvolvedMen2;
 
@@ -211,8 +243,8 @@ namespace RBMAI.AiModule
                         {
                             defenderAdvantage = (float)totalBattleSize / (float)battleSize;
                         }
-                        ____missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Defender, !Mission.Current.IsSiegeBattle);
-                        ____missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Attacker, !Mission.Current.IsSiegeBattle);
+                        missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Defender, !Mission.Current.IsSiegeBattle);
+                        missionAgentSpawnLogic.SetSpawnHorses(BattleSideEnum.Attacker, !Mission.Current.IsSiegeBattle);
 
                         MissionSpawnSettings spawnSettings = MissionSpawnSettings.CreateDefaultSpawnSettings();
                         spawnSettings.DefenderAdvantageFactor = defenderAdvantage;
@@ -229,7 +261,7 @@ namespace RBMAI.AiModule
                         //MissionSpawnSettings(10f, 0f, 0, InitialSpawnMethod.BattleSizeAllocating, ReinforcementSpawnMethod.Balanced, 0.05f, 0.166f); normal
                         //MissionSpawnSettings(90f, -15f, 5, InitialSpawnMethod.FreeAllocation, ReinforcementSpawnMethod.Fixed, 0f, 0f, 0f, 0.1f); sallyout
 
-                        ____missionAgentSpawnLogic.InitWithSinglePhase(numberOfInvolvedMen, numberOfInvolvedMen2, defenderInitialSpawn, attackerInitialSpawn, spawnDefenders: true, spawnAttackers: true, in spawnSettings);
+                        missionAgentSpawnLogic.InitWithSinglePhase(numberOfInvolvedMen, numberOfInvolvedMen2, defenderInitialSpawn, attackerInitialSpawn, spawnDefenders: true, spawnAttackers: true, in spawnSettings);
                         return false;
                     }
                     return true;
@@ -315,9 +347,13 @@ namespace RBMAI.AiModule
         [HarmonyPatch("CheckIfBattleShouldContinueAfterBattleMission")]
         private class SetRoutedPatch
         {
-            private static bool Prefix(ref PlayerEncounter __instance, ref MapEvent ____mapEvent, ref CampaignBattleResult ____campaignBattleResult, ref bool __result)
+            private static bool Prefix(PlayerEncounter __instance, ref bool __result)
             {
-                if (____campaignBattleResult != null && ____campaignBattleResult.PlayerVictory && ____campaignBattleResult.BattleResolved)
+                var playerEncounter = Traverse.Create(__instance);
+                CampaignBattleResult campaignBattleResult =
+                    playerEncounter.Field("_campaignBattleResult").GetValue<CampaignBattleResult>();
+                
+                if (campaignBattleResult != null && campaignBattleResult.PlayerVictory && campaignBattleResult.BattleResolved)
                 {
                     __result = false;
                     return false;

@@ -12,80 +12,98 @@ namespace RBMAI.AiModule.RbmTactics
     {
         [HarmonyPostfix]
         [HarmonyPatch("Advance")]
-        private static void PostfixAdvance(ref Formation ____mainInfantry, ref Formation ____archers, ref Formation ____rightCavalry, ref Formation ____leftCavalry, ref Formation ____rangedCavalry)
+        private static void PostfixAdvance(TacticFullScaleAttack __instance)
         {
-            if (____mainInfantry != null)
+            var tacticFullScaleAttack = Traverse.Create(__instance);
+            Formation archers = tacticFullScaleAttack.Field("_archers").GetValue<Formation>();
+            Formation mainInfantry = tacticFullScaleAttack.Field("_mainInfantry").GetValue<Formation>();
+            Formation rightCavalry = tacticFullScaleAttack.Field("_rightCavalry").GetValue<Formation>();
+            Formation leftCavalry = tacticFullScaleAttack.Field("_leftCavalry").GetValue<Formation>();
+            Formation rangedCavalry = tacticFullScaleAttack.Field("_rangedCavalry").GetValue<Formation>();
+            
+            if (mainInfantry != null)
             {
-                ____mainInfantry.AI.SetBehaviorWeight<BehaviorRegroup>(1.75f);
+                mainInfantry.AI.SetBehaviorWeight<BehaviorRegroup>(1.75f);
             }
-            if (____archers != null)
+            if (archers != null)
             {
-                ____archers.AI.SetBehaviorWeight<BehaviorSkirmish>(0f);
-                ____archers.AI.SetBehaviorWeight<BehaviorSkirmishLine>(0f);
-                ____archers.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(1f);
-                ____archers.AI.SetBehaviorWeight<BehaviorRegroup>(1.25f);
+                archers.AI.SetBehaviorWeight<BehaviorSkirmish>(0f);
+                archers.AI.SetBehaviorWeight<BehaviorSkirmishLine>(0f);
+                archers.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(1f);
+                archers.AI.SetBehaviorWeight<BehaviorRegroup>(1.25f);
             }
-            if (____rightCavalry != null)
+            if (rightCavalry != null)
             {
-                ____rightCavalry.AI.ResetBehaviorWeights();
-                ____rightCavalry.AI.SetBehaviorWeight<BehaviorProtectFlank>(1f).FlankSide = FormationAI.BehaviorSide.Right;
-                ____rightCavalry.AI.SetBehaviorWeight<RBMBehaviorForwardSkirmish>(1f).FlankSide = FormationAI.BehaviorSide.Right;
+                rightCavalry.AI.ResetBehaviorWeights();
+                rightCavalry.AI.SetBehaviorWeight<BehaviorProtectFlank>(1f).FlankSide = FormationAI.BehaviorSide.Right;
+                rightCavalry.AI.SetBehaviorWeight<RBMBehaviorForwardSkirmish>(1f).FlankSide = FormationAI.BehaviorSide.Right;
             }
-            if (____leftCavalry != null)
+            if (leftCavalry != null)
             {
-                ____leftCavalry.AI.ResetBehaviorWeights();
-                ____leftCavalry.AI.SetBehaviorWeight<BehaviorProtectFlank>(1f).FlankSide = FormationAI.BehaviorSide.Left;
-                ____leftCavalry.AI.SetBehaviorWeight<RBMBehaviorForwardSkirmish>(1f).FlankSide = FormationAI.BehaviorSide.Left;
+                leftCavalry.AI.ResetBehaviorWeights();
+                leftCavalry.AI.SetBehaviorWeight<BehaviorProtectFlank>(1f).FlankSide = FormationAI.BehaviorSide.Left;
+                leftCavalry.AI.SetBehaviorWeight<RBMBehaviorForwardSkirmish>(1f).FlankSide = FormationAI.BehaviorSide.Left;
             }
-            if (____rangedCavalry != null)
+            if (rangedCavalry != null)
             {
-                ____rangedCavalry.AI.ResetBehaviorWeights();
-                TacticFullScaleAttack.SetDefaultBehaviorWeights(____rangedCavalry);
-                ____rangedCavalry.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(1f);
-                ____rangedCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
+                rangedCavalry.AI.ResetBehaviorWeights();
+                TacticComponent.SetDefaultBehaviorWeights(rangedCavalry);
+                rangedCavalry.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(1f);
+                rangedCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
             }
         }
 
         [HarmonyPostfix]
         [HarmonyPatch("Attack")]
-        private static void PostfixAttack(ref Formation ____mainInfantry, ref Formation ____archers, ref Formation ____rightCavalry, ref Formation ____leftCavalry, ref Formation ____rangedCavalry)
+        private static void PostfixAttack(TacticFullScaleAttack __instance)
         {
-            if (____archers != null)
+            var tacticFullScaleAttack = Traverse.Create(__instance);
+            
+            Formation archers = tacticFullScaleAttack.Field("_archers").GetValue<Formation>();
+            Formation mainInfantry = tacticFullScaleAttack.Field("_mainInfantry").GetValue<Formation>();
+            Formation rightCavalry = tacticFullScaleAttack.Field("_rightCavalry").GetValue<Formation>();
+            Formation leftCavalry = tacticFullScaleAttack.Field("_leftCavalry").GetValue<Formation>();
+            Formation rangedCavalry = tacticFullScaleAttack.Field("_rangedCavalry").GetValue<Formation>();
+            
+            if (archers != null)
             {
-                ____archers.AI.ResetBehaviorWeights();
-                ____archers.AI.AddAiBehavior(new RBMBehaviorArcherSkirmish(____archers));
-                ____archers.AI.SetBehaviorWeight<RBMBehaviorArcherSkirmish>(1f);
-                ____archers.AI.SetBehaviorWeight<BehaviorSkirmishLine>(0f);
-                ____archers.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(0f);
+                archers.AI.ResetBehaviorWeights();
+                archers.AI.AddAiBehavior(new RBMBehaviorArcherSkirmish(archers));
+                archers.AI.SetBehaviorWeight<RBMBehaviorArcherSkirmish>(1f);
+                archers.AI.SetBehaviorWeight<BehaviorSkirmishLine>(0f);
+                archers.AI.SetBehaviorWeight<BehaviorScreenedSkirmish>(0f);
             }
-            if (____rightCavalry != null)
+            if (rightCavalry != null)
             {
-                ____rightCavalry.AI.ResetBehaviorWeights();
-                ____rightCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
-                ____rightCavalry.AI.SetBehaviorWeight<BehaviorCharge>(1f);
-                ____rightCavalry.AI.SetBehaviorWeight<RBMBehaviorCavalryCharge>(1f);
+                rightCavalry.AI.ResetBehaviorWeights();
+                rightCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
+                rightCavalry.AI.SetBehaviorWeight<BehaviorCharge>(1f);
+                rightCavalry.AI.SetBehaviorWeight<RBMBehaviorCavalryCharge>(1f);
             }
-            if (____leftCavalry != null)
+            if (leftCavalry != null)
             {
-                ____leftCavalry.AI.ResetBehaviorWeights();
-                ____leftCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
-                ____leftCavalry.AI.SetBehaviorWeight<BehaviorCharge>(1f);
-                ____leftCavalry.AI.SetBehaviorWeight<RBMBehaviorCavalryCharge>(1f);
+                leftCavalry.AI.ResetBehaviorWeights();
+                leftCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
+                leftCavalry.AI.SetBehaviorWeight<BehaviorCharge>(1f);
+                leftCavalry.AI.SetBehaviorWeight<RBMBehaviorCavalryCharge>(1f);
             }
-            if (____rangedCavalry != null)
+            if (rangedCavalry != null)
             {
-                ____rangedCavalry.AI.ResetBehaviorWeights();
-                TacticFullScaleAttack.SetDefaultBehaviorWeights(____rangedCavalry);
-                ____rangedCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
+                rangedCavalry.AI.ResetBehaviorWeights();
+                TacticComponent.SetDefaultBehaviorWeights(rangedCavalry);
+                rangedCavalry.AI.SetBehaviorWeight<BehaviorMountedSkirmish>(1f);
             }
-            RBMAI.Utilities.FixCharge(ref ____mainInfantry);
+            RBMAI.Utilities.FixCharge(ref mainInfantry);
         }
 
         [HarmonyPostfix]
         [HarmonyPatch("HasBattleBeenJoined")]
-        private static void PostfixHasBattleBeenJoined(Formation ____mainInfantry, bool ____hasBattleBeenJoined, ref bool __result)
+        private static void PostfixHasBattleBeenJoined(TacticFullScaleAttack __instance, ref bool __result)
         {
-            __result = RBMAI.Utilities.HasBattleBeenJoined(____mainInfantry, ____hasBattleBeenJoined);
+            var tacticFullScaleAttack = Traverse.Create(__instance);
+            Formation mainInfantry = tacticFullScaleAttack.Field("_mainInfantry").GetValue<Formation>();
+            bool hasBattleBeenJoined = tacticFullScaleAttack.Field("_hasBattleBeenJoined").GetValue<bool>();
+            __result = RBMAI.Utilities.HasBattleBeenJoined(mainInfantry, hasBattleBeenJoined);
         }
 
         [HarmonyPostfix]
@@ -108,13 +126,17 @@ namespace RBMAI.AiModule.RbmTactics
 
         [HarmonyPostfix]
         [HarmonyPatch("ManageFormationCounts")]
-        private static void PostfixManageFormationCounts(ref Formation ____leftCavalry, ref Formation ____rightCavalry)
+        private static void PostfixManageFormationCounts(TacticFullScaleAttack __instance)
         {
-            if (____leftCavalry != null && ____rightCavalry != null && ____leftCavalry.IsAIControlled && ____rightCavalry.IsAIControlled)
+            var tacticFullScaleAttack = Traverse.Create(__instance);
+            Formation leftCavalry = tacticFullScaleAttack.Field("_leftCavalry").GetValue<Formation>();
+            Formation rightCavalry = tacticFullScaleAttack.Field("_rightCavalry").GetValue<Formation>();
+            
+            if (leftCavalry != null && rightCavalry != null && leftCavalry.IsAIControlled && rightCavalry.IsAIControlled)
             {
                 List<Agent> mountedSkirmishersList = new List<Agent>();
                 List<Agent> mountedMeleeList = new List<Agent>();
-                ____leftCavalry.ApplyActionOnEachUnitViaBackupList(delegate (Agent agent)
+                leftCavalry.ApplyActionOnEachUnitViaBackupList(delegate (Agent agent)
                 {
                     bool ismountedSkrimisher = false;
                     for (EquipmentIndex equipmentIndex = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex < EquipmentIndex.NumAllWeaponSlots; equipmentIndex++)
@@ -138,7 +160,7 @@ namespace RBMAI.AiModule.RbmTactics
                     }
                 });
 
-                ____rightCavalry.ApplyActionOnEachUnitViaBackupList(delegate (Agent agent)
+                rightCavalry.ApplyActionOnEachUnitViaBackupList(delegate (Agent agent)
                 {
                     bool ismountedSkrimisher = false;
                     for (EquipmentIndex equipmentIndex = EquipmentIndex.WeaponItemBeginSlot; equipmentIndex < EquipmentIndex.NumAllWeaponSlots; equipmentIndex++)
@@ -162,16 +184,16 @@ namespace RBMAI.AiModule.RbmTactics
                     }
                 });
                 int j = 0;
-                int cavalryCount = ____leftCavalry.CountOfUnits + ____rightCavalry.CountOfUnits;
+                int cavalryCount = leftCavalry.CountOfUnits + rightCavalry.CountOfUnits;
                 foreach (Agent agent in mountedSkirmishersList.ToList())
                 {
                     if (j < cavalryCount / 2)
                     {
-                        agent.Formation = ____leftCavalry;
+                        agent.Formation = leftCavalry;
                     }
                     else
                     {
-                        agent.Formation = ____rightCavalry;
+                        agent.Formation = rightCavalry;
                     }
                     j++;
                 }
@@ -179,11 +201,11 @@ namespace RBMAI.AiModule.RbmTactics
                 {
                     if (j < cavalryCount / 2)
                     {
-                        agent.Formation = ____leftCavalry;
+                        agent.Formation = leftCavalry;
                     }
                     else
                     {
-                        agent.Formation = ____rightCavalry;
+                        agent.Formation = rightCavalry;
                     }
                     j++;
                 }

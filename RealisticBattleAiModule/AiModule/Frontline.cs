@@ -45,10 +45,14 @@ namespace RBMAI
 
             [HarmonyPrefix]
             [HarmonyPatch("GetOrderPositionOfUnit")]
-            private static bool PrefixGetOrderPositionOfUnit(Formation __instance, ref WorldPosition ____orderPosition, ref IFormationArrangement ____arrangement, ref Agent unit, List<Agent> ____detachedUnits, ref WorldPosition __result)
+            private static bool PrefixGetOrderPositionOfUnit(
+                ref Agent unit,Formation __instance,ref WorldPosition __result)
             {
+                var formation = Traverse.Create(__instance);
+                List<Agent> detachedUnits = formation.Field("_detachedUnits").GetValue<List<Agent>>();
+                
                 //if (__instance.MovementOrder.OrderType == OrderType.ChargeWithTarget && __instance.QuerySystem.IsInfantryFormation && !___detachedUnits.Contains(unit))
-                if (Mission.Current != null && Mission.Current.IsFieldBattle && unit != null && (__instance.GetReadonlyMovementOrderReference().OrderType == OrderType.ChargeWithTarget || __instance.GetReadonlyMovementOrderReference().OrderType == OrderType.Charge) && (__instance.QuerySystem.IsInfantryFormation || __instance.QuerySystem.IsRangedFormation) && !____detachedUnits.Contains(unit))
+                if (Mission.Current != null && Mission.Current.IsFieldBattle && unit != null && (__instance.GetReadonlyMovementOrderReference().OrderType == OrderType.ChargeWithTarget || __instance.GetReadonlyMovementOrderReference().OrderType == OrderType.Charge) && (__instance.QuerySystem.IsInfantryFormation || __instance.QuerySystem.IsRangedFormation) && !detachedUnits.Contains(unit))
                 {
                     int aiDecisionCooldownTime = 3;
                     AIDecision aiDecision;
@@ -616,96 +620,6 @@ namespace RBMAI
                     return unit.GetWorldPosition();
                 }
             }
-
-            [HarmonyPrefix]
-            [HarmonyPatch("GetOrderPositionOfUnitAux")]
-            private static bool PrefixGetOrderPositionOfUnitAux(Formation __instance, ref WorldPosition ____orderPosition, ref IFormationArrangement ____arrangement, ref Agent unit, List<Agent> ____detachedUnits, ref WorldPosition __result)
-            {
-                //if (Mission.Current.IsFieldBattle && unit != null && (__instance.QuerySystem.IsInfantryFormation) && (__instance.AI != null || __instance.IsAIControlled == false) && __instance.AI.ActiveBehavior != null)
-                //{
-                //    bool isAdvance =  (__instance.AI.ActiveBehavior.GetType().Name.Contains("Advance"));
-                //    if (isAdvance)
-                //    {
-                //        float distance = unit.GetWorldPosition().AsVec2.Distance(__instance.QuerySystem.AveragePosition);
-                //        if (__instance.OrderPositionIsValid && distance > 60f)
-                //        {
-                //            WorldPosition pos = unit.GetWorldPosition();
-                //            pos.SetVec2(__instance.QuerySystem.AveragePosition);
-                //            __result = pos;
-                //            return false;
-                //        }
-                //    }
-                //}
-                //if (__instance.IsCavalry())
-                //{
-                //    unit.SetAIBehaviorValues(AISimpleBehaviorKind.GoToPos, 0.01f, 7f, 0.01f, 110f, 1f);
-                //    unit.SetAIBehaviorValues(AISimpleBehaviorKind.ChargeHorseback, 0.01f, 7f, 0.01f, 20f, 0.01f);
-                //    unit.SetAIBehaviorValues(AISimpleBehaviorKind.Melee, 8f, 7f, 10f, 20f, 1f);
-                //    //__instance.ApplyActionOnEachUnitViaBackupList(delegate (Agent agent)
-                //    //{
-                //    //    if (MathF.Min(MathF.Max(MathF.Ceiling(((float)agent.Character.Level - 5f) / 5f), 0), 6) > 3)
-                //    //    {
-                //    //        agent.SetAIBehaviorValues(AISimpleBehaviorKind.GoToPos, 0.01f, 7f, 0.01f, 20f, 1f);
-                //    //        agent.SetAIBehaviorValues(AISimpleBehaviorKind.Melee, 8f, 7f, 10f, 20f, 0.01f);
-                //    //    }
-                //    //});
-                //}
-                //if (!Mission.Current.IsFieldBattle && unit != null && (__instance.QuerySystem.IsInfantryFormation) && (__instance.AI != null || __instance.IsAIControlled == false) && __instance.AI.ActiveBehavior != null)
-                //{
-                //    if (__instance.QuerySystem.ClosestEnemyFormation != null)
-                //    {
-                //        if (__instance.OrderPositionIsValid && __instance.OrderPosition.Distance(__instance.QuerySystem.AveragePosition) < 9f)
-                //        //if(__instance.QuerySystem.ClosestEnemyFormation.AveragePosition.Distance(__instance.QuerySystem.AveragePosition) < 25f)
-                //        {
-                //            //InformationManager.DisplayMessage(new InformationMessage(__instance.AI.ActiveBehavior.GetType().Name + " " + __instance.MovementOrder.OrderType.ToString()));
-                //            //bool exludedWhenAiControl = !(__instance.IsAIControlled && (__instance.AI.ActiveBehavior.GetType().Name.Contains("Regroup") || __instance.AI.ActiveBehavior.GetType().Name.Contains("Advance")));
-                //            //bool exludedWhenPlayerControl = !(!__instance.IsAIControlled && (__instance.GetReadonlyMovementOrderReference().OrderType.ToString().Contains("Advance")));
-
-                //            if (!____detachedUnits.Contains(unit))
-                //            {
-                //                Mission mission = Mission.Current;
-                //                if (mission.Mode != MissionMode.Deployment)
-                //                {
-                //                    var targetAgent = unit.GetTargetAgent();
-                //                    if (targetAgent != null)
-                //                    {
-                //                        Vec2 unitPosition = unit.GetWorldPosition().AsVec2;
-                //                        //Vec2 direction = (targetAgent.GetWorldPosition().AsVec2 - unitPosition).Normalized();
-                //                        Vec2 direction = unit.LookDirection.AsVec2;
-
-                //                        IEnumerable<Agent> agents = mission.GetNearbyAllyAgents(unitPosition + direction * 0.8f, 1f, unit.Team);
-                //                        if (agents.Count() > 2)
-                //                        {
-                //                            int relevantAgentCount = 0;
-                //                            foreach (Agent agent in agents)
-                //                            {
-                //                                if (Math.Abs(unit.VisualPosition.Z - agent.VisualPosition.Z) < 0.1f && unit.Formation == agent.Formation)
-                //                                {
-                //                                    relevantAgentCount++;
-                //                                }
-                //                            }
-
-                //                            if (relevantAgentCount > 2)
-                //                            {
-                //                                //if (MBRandom.RandomInt(100) == 0)
-                //                                //{
-                //                                //    return true;
-                //                                //}
-                //                                //else
-                //                                //{
-                //                                __result = unit.GetWorldPosition();
-                //                                return false;
-                //                                //}
-                //                            }
-                //                        }
-                //                    }
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
-                return true;
-            }
         }
     }
 
@@ -714,17 +628,20 @@ namespace RBMAI
     {
         [HarmonyPrefix]
         [HarmonyPatch("UpdateFormationMovement")]
-        private static void PostfixUpdateFormationMovement(ref HumanAIComponent __instance, ref Agent ___Agent)
+        private static void PostfixUpdateFormationMovement(HumanAIComponent __instance)
         {
-            if (___Agent.Controller == Agent.ControllerType.AI && ___Agent.Formation != null && ___Agent.Formation.GetReadonlyMovementOrderReference().OrderEnum == MovementOrder.MovementOrderEnum.Move)
+            var humanAIComponent = Traverse.Create(__instance);
+            Agent agent = humanAIComponent.Field("Agent").GetValue<Agent>();
+            
+            if (agent.Controller == Agent.ControllerType.AI && agent.Formation != null && agent.Formation.GetReadonlyMovementOrderReference().OrderEnum == MovementOrder.MovementOrderEnum.Move)
             {
                 PropertyInfo propertyShouldCatchUpWithFormation = typeof(HumanAIComponent).GetProperty("ShouldCatchUpWithFormation");
                 propertyShouldCatchUpWithFormation.DeclaringType.GetProperty("ShouldCatchUpWithFormation");
                 propertyShouldCatchUpWithFormation.SetValue(__instance, true, BindingFlags.NonPublic | BindingFlags.SetProperty, null, null, null);
 
-                Vec2 currentGlobalPositionOfUnit = ___Agent.Formation.GetCurrentGlobalPositionOfUnit(___Agent, false);
-                FormationQuerySystem.FormationIntegrityDataGroup formationIntegrityData = ___Agent.Formation.QuerySystem.FormationIntegrityData;
-                ___Agent.SetFormationIntegrityData(currentGlobalPositionOfUnit, ___Agent.Formation.CurrentDirection, formationIntegrityData.AverageVelocityExcludeFarAgents, formationIntegrityData.AverageMaxUnlimitedSpeedExcludeFarAgents, formationIntegrityData.DeviationOfPositionsExcludeFarAgents);
+                Vec2 currentGlobalPositionOfUnit = agent.Formation.GetCurrentGlobalPositionOfUnit(agent, false);
+                FormationQuerySystem.FormationIntegrityDataGroup formationIntegrityData = agent.Formation.QuerySystem.FormationIntegrityData;
+                agent.SetFormationIntegrityData(currentGlobalPositionOfUnit, agent.Formation.CurrentDirection, formationIntegrityData.AverageVelocityExcludeFarAgents, formationIntegrityData.AverageMaxUnlimitedSpeedExcludeFarAgents, formationIntegrityData.DeviationOfPositionsExcludeFarAgents);
             }
             //___Agent.SetDirectionChangeTendency(0.9f);
         }
@@ -763,26 +680,36 @@ namespace RBMAI
 
         [HarmonyPrefix]
         [HarmonyPatch("GetFormationFrame")]
-        private static bool PrefixGetFormationFrame(ref bool __result, ref Agent ___Agent, ref HumanAIComponent __instance, ref WorldPosition formationPosition, ref Vec2 formationDirection, ref float speedLimit, ref bool isSettingDestinationSpeed, ref bool limitIsMultiplier)
+        private static bool PrefixGetFormationFrame(
+            ref bool __result, 
+            HumanAIComponent __instance,
+            ref WorldPosition formationPosition,
+            ref Vec2 formationDirection, 
+            ref float speedLimit, 
+            ref bool isSettingDestinationSpeed,
+            ref bool limitIsMultiplier)
         {
-            if (___Agent != null)
+            var humanAIComponent = Traverse.Create(__instance);
+            Agent agent = humanAIComponent.Field("Agent").GetValue<Agent>();
+            
+            if (agent != null)
             {
-                var formation = ___Agent.Formation;
-                if (!___Agent.IsMount && formation != null && (formation.QuerySystem.IsCavalryFormation || formation.QuerySystem.IsInfantryFormation || formation.QuerySystem.IsRangedFormation) && !(bool)IsUnitDetachedForDebug.Invoke(formation, new object[] { ___Agent }))
+                var formation = agent.Formation;
+                if (!agent.IsMount && formation != null && (formation.QuerySystem.IsCavalryFormation || formation.QuerySystem.IsInfantryFormation || formation.QuerySystem.IsRangedFormation) && !(bool)IsUnitDetachedForDebug.Invoke(formation, new object[] { agent }))
                 {
                     if (formation.GetReadonlyMovementOrderReference().OrderType == OrderType.ChargeWithTarget)
                     {
-                        if (___Agent != null && formation != null)
+                        if (agent != null && formation != null)
                         {
                             isSettingDestinationSpeed = false;
-                            formationPosition = formation.GetOrderPositionOfUnit(___Agent);
-                            if (___Agent.GetTargetAgent() != null)
+                            formationPosition = formation.GetOrderPositionOfUnit(agent);
+                            if (agent.GetTargetAgent() != null)
                             {
-                                formationDirection = ___Agent.GetTargetAgent().Position.AsVec2 - ___Agent.Position.AsVec2;
+                                formationDirection = agent.GetTargetAgent().Position.AsVec2 - agent.Position.AsVec2;
                             }
                             else
                             {
-                                formationDirection = formation.GetDirectionOfUnit(___Agent);
+                                formationDirection = formation.GetDirectionOfUnit(agent);
                             }
                             limitIsMultiplier = true;
                             speedLimit = __instance != null && HumanAIComponent.FormationSpeedAdjustmentEnabled ? __instance.GetDesiredSpeedInFormation(false) : -1f;

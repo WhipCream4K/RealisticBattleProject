@@ -705,7 +705,7 @@ namespace RBMCombat
                         }
                         if (captain.GetPerkValue(DefaultPerks.Medicine.MinisterOfHealth))
                         {
-                            int num = MathF.Max(__instance.GetEffectiveSkill(agent, DefaultSkills.Medicine) - 200, 0) / 10;
+                            int num = MathF.Max(__instance.GetEffectiveSkill(agent.Character,agent.Origin,agent.Formation, DefaultSkills.Medicine) - 200, 0) / 10;
                             if (num > 0)
                             {
                                 stat.Add(num);

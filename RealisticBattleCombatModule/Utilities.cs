@@ -335,13 +335,17 @@ namespace RBMCombat
                         {
                             if (!attackCollisionData.IsMissile)
                             {
-                                float wdm = MissionGameModels.Current.AgentStatCalculateModel.GetWeaponDamageMultiplier(attacker, wcd);
+                                float wdm = MissionGameModels.Current.AgentStatCalculateModel.GetWeaponDamageMultiplier(
+                                    attacker.Character,attacker.Origin,attacker.Formation, wcd);
+                                
                                 magnitude = attackCollisionData.BaseMagnitude / wdm;
                             }
                             SkillObject skill = (wcd == null) ? DefaultSkills.Athletics : wcd.RelevantSkill;
                             if (skill != null)
                             {
-                                int ef = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attacker, skill);
+                                int ef = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                                    attacker.Character,attacker.Origin,attacker.Formation, skill);
+                                
                                 float effectiveSkill = Utilities.GetEffectiveSkillWithDR(ef);
                                 float skillModifier = Utilities.CalculateSkillModifier(ef);
                                 if (attacker != null && attacker.Equipment != null && attacker.GetWieldedItemIndex(HandIndex.MainHand) != EquipmentIndex.None)

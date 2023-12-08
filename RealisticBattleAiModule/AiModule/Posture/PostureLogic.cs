@@ -6,7 +6,6 @@ using TaleWorlds.CampaignSystem.TournamentGames;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
-using TaleWorlds.MountAndBlade.ComponentInterfaces;
 using static TaleWorlds.Core.ItemObject;
 using static TaleWorlds.MountAndBlade.Agent;
 
@@ -101,7 +100,9 @@ namespace RBMAI
                             int effectiveWeaponSkill = 0;
                             if (weaponSkill != null)
                             {
-                                effectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(__instance, weaponSkill);
+                                // effectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(__instance, weaponSkill);
+                                effectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                                    __instance.Character,__instance.Origin,__instance.Formation, weaponSkill);
                             }
 
                             float athleticBase = 20f;
@@ -114,7 +115,9 @@ namespace RBMAI
 
                             if (__instance.HasMount)
                             {
-                                int effectiveRidingSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(__instance, DefaultSkills.Riding);
+                                // int effectiveRidingSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(__instance, DefaultSkills.Riding);
+                                int effectiveRidingSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                                    __instance.Character,__instance.Origin,__instance.Formation, DefaultSkills.Riding);
                                 posture.maxPosture = (athleticBase * (baseModifier + (effectiveRidingSkill / strengthSkillModifier))) + (weaponSkillBase * (baseModifier + (effectiveWeaponSkill / weaponSkillModifier)));
                                 posture.regenPerTick = (athleticRegenBase * (baseModifier + (effectiveRidingSkill / strengthSkillModifier))) + (weaponSkillRegenBase * (baseModifier + (effectiveWeaponSkill / weaponSkillModifier)));
                                 //posture.maxPosture = 100f;
@@ -122,7 +125,9 @@ namespace RBMAI
                             }
                             else
                             {
-                                int effectiveAthleticSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(__instance, DefaultSkills.Athletics);
+                                // int effectiveAthleticSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(__instance, DefaultSkills.Athletics);
+                                int effectiveAthleticSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                                    __instance.Character,__instance.Origin,__instance.Formation, DefaultSkills.Athletics);
                                 posture.maxPosture = (athleticBase * (baseModifier + (effectiveAthleticSkill / strengthSkillModifier))) + (weaponSkillBase * (baseModifier + (effectiveWeaponSkill / weaponSkillModifier)));
                                 posture.regenPerTick = (athleticRegenBase * (baseModifier + (effectiveAthleticSkill / strengthSkillModifier))) + (weaponSkillRegenBase * (baseModifier + (effectiveWeaponSkill / weaponSkillModifier)));
                                 //posture.maxPosture = 100f;
@@ -758,14 +763,16 @@ namespace RBMAI
                 return sweetSpotMagnitude;
             }
 
-            public static float CalculateThrustMagnitude(BasicCharacterObject character, MissionWeapon weapon, int weaponUsageIndex, int relevantSkill)
+            public static float CalculateThrustMagnitude(BasicCharacterObject character, MissionWeapon weapon,
+                int weaponUsageIndex, int relevantSkill)
             {
                 float progressEffect = 1f;
                 float thrustMagnitude = -1f;
 
                 if (weapon.Item != null && weapon.Item.GetWeaponWithUsageIndex(weaponUsageIndex) != null)
                 {
-                    float thrustWeaponSpeed = (float)weapon.GetModifiedThrustSpeedForCurrentUsage() / 11.7647057f * progressEffect;
+                    float thrustWeaponSpeed = (float) weapon.GetModifiedThrustSpeedForCurrentUsage() / 11.7647057f *
+                                              progressEffect;
 
                     int ef = relevantSkill;
                     float effectiveSkillDR = Utilities.GetEffectiveSkillWithDR(ef);
@@ -781,39 +788,39 @@ namespace RBMAI
                         case WeaponClass.OneHandedAxe:
                         case WeaponClass.OneHandedPolearm:
                         case WeaponClass.TwoHandedMace:
-                            {
-                                float thrustskillModifier = 1f + (effectiveSkillDR / 1000f);
+                        {
+                            float thrustskillModifier = 1f + (effectiveSkillDR / 1000f);
 
-                                thrustWeaponSpeed = Utilities.CalculateThrustSpeed(weaponWeight, weaponInertia, weaponCOM);
-                                thrustWeaponSpeed = thrustWeaponSpeed * 0.75f * thrustskillModifier * progressEffect;
-                                break;
-                            }
+                            thrustWeaponSpeed = Utilities.CalculateThrustSpeed(weaponWeight, weaponInertia, weaponCOM);
+                            thrustWeaponSpeed = thrustWeaponSpeed * 0.75f * thrustskillModifier * progressEffect;
+                            break;
+                        }
                         case WeaponClass.TwoHandedPolearm:
-                            {
-                                float thrustskillModifier = 1f + (effectiveSkillDR / 1000f);
+                        {
+                            float thrustskillModifier = 1f + (effectiveSkillDR / 1000f);
 
-                                thrustWeaponSpeed = Utilities.CalculateThrustSpeed(weaponWeight, weaponInertia, weaponCOM);
-                                thrustWeaponSpeed = thrustWeaponSpeed * 0.7f * thrustskillModifier * progressEffect;
-                                break;
-                            }
+                            thrustWeaponSpeed = Utilities.CalculateThrustSpeed(weaponWeight, weaponInertia, weaponCOM);
+                            thrustWeaponSpeed = thrustWeaponSpeed * 0.7f * thrustskillModifier * progressEffect;
+                            break;
+                        }
                         case WeaponClass.TwoHandedAxe:
-                            {
-                                float thrustskillModifier = 1f + (effectiveSkillDR / 1000f);
+                        {
+                            float thrustskillModifier = 1f + (effectiveSkillDR / 1000f);
 
-                                thrustWeaponSpeed = Utilities.CalculateThrustSpeed(weaponWeight, weaponInertia, weaponCOM);
-                                thrustWeaponSpeed = thrustWeaponSpeed * 0.9f * thrustskillModifier * progressEffect;
-                                break;
-                            }
+                            thrustWeaponSpeed = Utilities.CalculateThrustSpeed(weaponWeight, weaponInertia, weaponCOM);
+                            thrustWeaponSpeed = thrustWeaponSpeed * 0.9f * thrustskillModifier * progressEffect;
+                            break;
+                        }
                         case WeaponClass.OneHandedSword:
                         case WeaponClass.Dagger:
                         case WeaponClass.TwoHandedSword:
-                            {
-                                float thrustskillModifier = 1f + (effectiveSkillDR / 800f);
+                        {
+                            float thrustskillModifier = 1f + (effectiveSkillDR / 800f);
 
-                                thrustWeaponSpeed = Utilities.CalculateThrustSpeed(weaponWeight, weaponInertia, weaponCOM);
-                                thrustWeaponSpeed = thrustWeaponSpeed * 0.7f * thrustskillModifier * progressEffect;
-                                break;
-                            }
+                            thrustWeaponSpeed = Utilities.CalculateThrustSpeed(weaponWeight, weaponInertia, weaponCOM);
+                            thrustWeaponSpeed = thrustWeaponSpeed * 0.7f * thrustskillModifier * progressEffect;
+                            break;
+                        }
                     }
 
                     switch (weapon.Item.GetWeaponWithUsageIndex(weaponUsageIndex).WeaponClass)
@@ -822,16 +829,18 @@ namespace RBMAI
                         case WeaponClass.OneHandedSword:
                         case WeaponClass.Dagger:
                         case WeaponClass.Mace:
-                            {
-                                thrustMagnitude = Utilities.CalculateThrustMagnitudeForOneHandedWeapon(weaponWeight, effectiveSkillDR, thrustWeaponSpeed, 0f, Agent.UsageDirection.AttackDown);
-                                break;
-                            }
+                        {
+                            thrustMagnitude = Utilities.CalculateThrustMagnitudeForOneHandedWeapon(weaponWeight,
+                                effectiveSkillDR, thrustWeaponSpeed, 0f, Agent.UsageDirection.AttackDown);
+                            break;
+                        }
                         case WeaponClass.TwoHandedPolearm:
                         case WeaponClass.TwoHandedSword:
-                            {
-                                thrustMagnitude = Utilities.CalculateThrustMagnitudeForTwoHandedWeapon(weaponWeight, effectiveSkillDR, thrustWeaponSpeed, 0f, Agent.UsageDirection.AttackDown);
-                                break;
-                            }
+                        {
+                            thrustMagnitude = Utilities.CalculateThrustMagnitudeForTwoHandedWeapon(weaponWeight,
+                                effectiveSkillDR, thrustWeaponSpeed, 0f, Agent.UsageDirection.AttackDown);
+                            break;
+                        }
                         //default:
                         //    {
                         //        //thrustMagnitude = Game.Current.BasicModels.StrikeMagnitudeModel.CalculateStrikeMagnitudeForThrust(character, null, thrustWeaponSpeed, weaponWeight, weapon.Item, weapon.Item.GetWeaponWithUsageIndex(weaponUsageIndex), 0f, false);
@@ -839,6 +848,7 @@ namespace RBMAI
                         //    }
                     }
                 }
+
                 return thrustMagnitude;
             }
 
@@ -930,8 +940,9 @@ namespace RBMAI
                 {
                     weaponDamage = targetWeapon.GetModifiedThrustDamageForCurrentUsage();
                 }
-
-                return MBMath.ClampInt(MathF.Ceiling(MissionGameModels.Current.StrikeMagnitudeModel.ComputeRawDamage(b.DamageType, weaponDamage, armorSumPosture, 1f)), 0, 2000);
+                
+                // return MBMath.ClampInt(MathF.Ceiling(MissionGameModels.Current.StrikeMagnitudeModel.ComputeRawDamage(b.DamageType, weaponDamage, armorSumPosture, 1f)), 0, 2000);
+                return MBMath.ClampInt(MathF.Ceiling(Game.Current.BasicModels.StrikeMagnitudeModel.ComputeRawDamage(b.DamageType, weaponDamage, armorSumPosture, 1f)), 0, 2000);
             }
 
             private static float calculateDefenderPostureDamage(Agent defenderAgent, Agent attackerAgent, float absoluteDamageModifier, float actionTypeDamageModifier, ref AttackCollisionData collisionData, MissionWeapon weapon, float comHitModifier)
@@ -946,18 +957,31 @@ namespace RBMAI
                 SkillObject attackerWeaponSkill = WeaponComponentData.GetRelevantSkillFromWeaponClass(weapon.CurrentUsageItem.WeaponClass);
                 float attackerEffectiveWeaponSkill = 0;
                 float attackerEffectiveStrengthSkill = 0;
+
+                SkillObject defenderSkill = DefaultSkills.Athletics;
+                
                 if (attackerWeaponSkill != null)
                 {
-                    attackerEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, attackerWeaponSkill);
+                    defenderSkill = attackerWeaponSkill;
+                    // attackerEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, attackerWeaponSkill);
                 }
                 if (attackerAgent.HasMount)
                 {
-                    attackerEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, DefaultSkills.Riding);
+                    defenderSkill = DefaultSkills.Riding;
+                    // attackerEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, DefaultSkills.Riding);
                 }
-                else
-                {
-                    attackerEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, DefaultSkills.Athletics);
-                }
+                // else
+                // {
+                //     attackSkill = DefaultSkills.Athletics;
+                //     // attackerEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, DefaultSkills.Athletics);
+                // }
+
+                attackerEffectiveStrengthSkill =
+                    MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                        attackerAgent.Character,
+                        attackerAgent.Origin,
+                        attackerAgent.Formation,
+                        defenderSkill);
 
                 float defenderEffectiveWeaponSkill = 0;
                 float defenderEffectiveStrengthSkill = 0;
@@ -980,7 +1004,9 @@ namespace RBMAI
                     SkillObject defenderWeaponSkill = WeaponComponentData.GetRelevantSkillFromWeaponClass(defenderWeapon.CurrentUsageItem.WeaponClass);
                     if (defenderWeaponSkill != null)
                     {
-                        defenderEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, defenderWeaponSkill);
+                        // defenderEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, defenderWeaponSkill);
+                        defenderEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                            defenderAgent.Character,defenderAgent.Origin,defenderAgent.Formation, defenderWeaponSkill);
                     }
                     if (defenderAgent.GetWieldedItemIndex(Agent.HandIndex.OffHand) != EquipmentIndex.None)
                     {
@@ -1000,11 +1026,15 @@ namespace RBMAI
                 }
                 if (defenderAgent.HasMount)
                 {
-                    defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, DefaultSkills.Riding);
+                    // defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, DefaultSkills.Riding);
+                    defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                        defenderAgent.Character,defenderAgent.Origin,defenderAgent.Formation, DefaultSkills.Riding);
                 }
                 else
                 {
-                    defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, DefaultSkills.Athletics);
+                    // defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, DefaultSkills.Athletics);
+                    defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                        defenderAgent.Character,defenderAgent.Origin,defenderAgent.Formation, DefaultSkills.Athletics);
                 }
 
                 defenderEffectiveWeaponSkill = defenderEffectiveWeaponSkill / weaponSkillModifier;
@@ -1143,18 +1173,25 @@ namespace RBMAI
                 float attackerEffectiveWeaponSkill = 0;
                 float attackerEffectiveStrengthSkill = 0;
 
+                SkillObject attackerSkill = DefaultSkills.Athletics;
+
                 if (attackerWeaponSkill != null)
                 {
-                    attackerEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, attackerWeaponSkill);
+                    // attackerEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, attackerWeaponSkill);
+                    attackerSkill = attackerWeaponSkill;
                 }
                 if (attackerAgent.HasMount)
                 {
-                    attackerEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, DefaultSkills.Riding);
+                    // attackerEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, DefaultSkills.Riding);
+                    attackerSkill = DefaultSkills.Riding;
                 }
-                else
-                {
-                    attackerEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, DefaultSkills.Athletics);
-                }
+                // else
+                // {
+                //     // attackerEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(attackerAgent, DefaultSkills.Athletics);
+                // }
+
+                attackerEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                    attackerAgent.Character,attackerAgent.Origin,attackerAgent.Formation, attackerSkill);
 
                 float defenderEffectiveWeaponSkill = 0;
                 float defenderEffectiveStrengthSkill = 0;
@@ -1177,7 +1214,9 @@ namespace RBMAI
                     SkillObject defenderWeaponSkill = WeaponComponentData.GetRelevantSkillFromWeaponClass(defenderWeapon.CurrentUsageItem.WeaponClass);
                     if (defenderWeaponSkill != null)
                     {
-                        defenderEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, defenderWeaponSkill);
+                        // defenderEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, defenderWeaponSkill);
+                        defenderEffectiveWeaponSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                            defenderAgent.Character,defenderAgent.Origin,defenderAgent.Formation, defenderWeaponSkill);
                     }
                     if (defenderAgent.GetWieldedItemIndex(Agent.HandIndex.OffHand) != EquipmentIndex.None)
                     {
@@ -1195,13 +1234,18 @@ namespace RBMAI
                         }
                     }
                 }
+                
                 if (defenderAgent.HasMount)
                 {
-                    defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, DefaultSkills.Riding);
+                    // defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, DefaultSkills.Riding);
+                    defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                        defenderAgent.Character,defenderAgent.Origin,defenderAgent.Formation, DefaultSkills.Riding);
                 }
                 else
                 {
-                    defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, DefaultSkills.Athletics);
+                    // defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(defenderAgent, DefaultSkills.Athletics);
+                    defenderEffectiveStrengthSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                        defenderAgent.Character,defenderAgent.Origin,defenderAgent.Formation, DefaultSkills.Athletics);
                 }
 
                 defenderEffectiveWeaponSkill = defenderEffectiveWeaponSkill / weaponSkillModifier;
@@ -1330,7 +1374,7 @@ namespace RBMAI
                 newBLow.AttackerStunPeriod = collisionData.AttackerStunPeriod;
                 newBLow.DefenderStunPeriod = collisionData.DefenderStunPeriod;
                 newBLow.BlowFlag = BlowFlags.None;
-                newBLow.GlobalPosition = collisionData.CollisionGlobalPosition;
+                newBLow.Position = collisionData.CollisionGlobalPosition;
                 newBLow.BoneIndex = collisionData.CollisionBoneIndex;
                 newBLow.Direction = blowDirection;
                 newBLow.SwingDirection = swingDirection;
@@ -1361,7 +1405,7 @@ namespace RBMAI
                 newBLow.AttackerStunPeriod = collisionData.AttackerStunPeriod;
                 newBLow.DefenderStunPeriod = collisionData.DefenderStunPeriod;
                 newBLow.BlowFlag = BlowFlags.None;
-                newBLow.GlobalPosition = collisionData.CollisionGlobalPosition;
+                newBLow.Position = collisionData.CollisionGlobalPosition;
                 newBLow.BoneIndex = collisionData.CollisionBoneIndex;
                 newBLow.Direction = blowDirection;
                 newBLow.SwingDirection = swingDirection;
@@ -1392,7 +1436,7 @@ namespace RBMAI
                 newBLow.AttackerStunPeriod = collisionData.AttackerStunPeriod / 5f;
                 newBLow.DefenderStunPeriod = collisionData.DefenderStunPeriod * 5f;
                 newBLow.BlowFlag = BlowFlags.None;
-                newBLow.GlobalPosition = collisionData.CollisionGlobalPosition;
+                newBLow.Position = collisionData.CollisionGlobalPosition;
                 newBLow.BoneIndex = collisionData.CollisionBoneIndex;
                 newBLow.Direction = blowDirection;
                 newBLow.SwingDirection = swingDirection;

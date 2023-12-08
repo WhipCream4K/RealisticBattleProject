@@ -88,7 +88,9 @@ namespace RBMCombat
                         SkillObject skill = (weaponData.GetItemObject() == null) ? DefaultSkills.Athletics : weaponData.GetItemObject().RelevantSkill;
                         if (skill != null)
                         {
-                            int ef = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(__instance, skill);
+                            int ef = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                                __instance.Character,__instance.Origin,__instance.Formation, skill);
+                            
                             float effectiveSkillDR = Utilities.GetEffectiveSkillWithDR(ef);
 
                             MissionWeapon missionWeapon = __instance.Equipment[equipmentSlot];
@@ -674,7 +676,9 @@ namespace RBMCombat
                                     SkillObject skill = (wd.GetItemObject() == null) ? DefaultSkills.Athletics : weaponData.GetItemObject().RelevantSkill;
                                     if (skill != null)
                                     {
-                                        int effectiveSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(__instance, skill);
+                                        // int effectiveSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(__instance, skill);
+                                        int effectiveSkill = MissionGameModels.Current.AgentStatCalculateModel.GetEffectiveSkill(
+                                            __instance.Character,__instance.Origin,__instance.Formation, skill);
 
                                         RangedWeaponStats rws;
                                         if (rangedWeaponStats.TryGetValue(mw.GetModifiedItemName().ToString(), out rws))
@@ -870,7 +874,9 @@ namespace RBMCombat
                         SkillObject skill = (equippedItem == null) ? DefaultSkills.Athletics : equippedItem.RelevantSkill;
                         if (skill != null)
                         {
-                            int ef = __instance.GetEffectiveSkill(agent, skill);
+                            // int ef = __instance.GetEffectiveSkill(agent, skill);
+                            int ef = __instance.GetEffectiveSkill(agent.Character,agent.Origin,agent.Formation, skill);
+                            
                             float effectiveSkill = Utilities.GetEffectiveSkillWithDR(ef);
                             if (equippedItem != null)
                             {
@@ -901,7 +907,8 @@ namespace RBMCombat
                         SkillObject skill = (equippedItem == null) ? DefaultSkills.Athletics : equippedItem.RelevantSkill;
                         if (skill != null)
                         {
-                            int ef = __instance.GetEffectiveSkill(agent, skill);
+                            // int ef = __instance.GetEffectiveSkill(agent, skill);
+                            int ef = __instance.GetEffectiveSkill(agent.Character,agent.Origin,agent.Formation, skill);
                             float effectiveSkill = Utilities.GetEffectiveSkillWithDR(ef);
                             if (equippedItem != null)
                             {
@@ -933,7 +940,8 @@ namespace RBMCombat
                     SkillObject skill = (equippedItem == null) ? DefaultSkills.Athletics : equippedItem.RelevantSkill;
                     if (skill != null)
                     {
-                        int ef = __instance.GetEffectiveSkill(agent, skill);
+                        // int ef = __instance.GetEffectiveSkill(agent, skill);
+                        int ef = __instance.GetEffectiveSkill(agent.Character,agent.Origin,agent.Formation, skill);
                         float effectiveSkill = Utilities.GetEffectiveSkillWithDR(ef);
 
                         if (equippedItem != null)
@@ -1069,8 +1077,23 @@ namespace RBMCombat
             if (GameNetwork.IsServerOrRecorder)
             {
                 GameNetwork.BeginBroadcastModuleEvent(); ;
-                GameNetwork.WriteMessage(new HandleMissileCollisionReaction(missileIndex, collisionReaction, attachLocalFrame, isAttachedFrameLocal, attackerAgent.Index, attachedAgent?.Index ?? (-1), attachedToShield, attachedBoneIndex, attachedMissionObject?.Id ?? MissionObjectId.Invalid, bounceBackVelocity, bounceBackAngularVelocity, missionObjectId.Id));
+                // GameNetwork.WriteMessage(new 
+                //     HandleMissileCollisionReaction(
+                //         missileIndex, 
+                //         collisionReaction, 
+                //         attachLocalFrame, 
+                //         isAttachedFrameLocal,
+                //         attackerAgent., 
+                //         attachedAgent?.Index ?? (-1), attachedToShield, attachedBoneIndex, attachedMissionObject?.Id ?? MissionObjectId.Invalid, bounceBackVelocity, bounceBackAngularVelocity, missionObjectId.Id));
                 //GameNetwork.WriteMessage(new HandleMissileCollisionReaction(missileIndex, collisionReaction, attachLocalFrame, attackerAgent, attachedAgent, attachedToShield, attachedBoneIndex, attachedMissionObject, bounceBackVelocity, bounceBackAngularVelocity, missionObjectId.Id));
+                GameNetwork.WriteMessage(new 
+                    HandleMissileCollisionReaction(
+                        missileIndex, 
+                        collisionReaction, 
+                        attachLocalFrame, 
+                        isAttachedFrameLocal,
+                        attackerAgent, 
+                        attachedAgent, attachedToShield, attachedBoneIndex, attachedMissionObject, bounceBackVelocity, bounceBackAngularVelocity, missionObjectId.Id));
                 GameNetwork.EndBroadcastModuleEvent(GameNetwork.EventBroadcastFlags.AddToMissionRecord);
             }
             else if (GameNetwork.IsClientOrReplay && flag)
